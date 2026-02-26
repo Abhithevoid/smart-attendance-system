@@ -15,9 +15,10 @@ const generateToken = (id) => {
 // @access Public
 const registerUser = async (req, res) => {
   console.log("Register controller running...");
+  console.log("Request body:", req.body); // ← see exactly what's coming in
+
   try {
-    const { name, email, password, universityId, role, department, phone } =
-      req.body;
+    const { name, email, password, universityId, role, department, phone } = req.body;
 
     // Validation
     if (!name || !email || !password || !universityId) {
@@ -43,19 +44,39 @@ const registerUser = async (req, res) => {
       email,
       password,
       universityId,
-      role,
-      department,
-      phone,
+      role: role || "student",
+      department: department || "",
+      phone: phone || "",
     });
 
+    console.log("User created:", user._id); // ← confirm creation
+
     res.status(201).json({
-      _id: user._id,
-      name: user.name,
+      _id:   user._id,
+      name:  user.name,
       email: user.email,
-      role: user.role,
+      role:  user.role,
       token: generateToken(user._id),
     });
+
   } catch (error) {
+    console.error("REGISTER ERROR:", error.message); // ← exact crash reason
+    console.error("FULL ERROR:", error);
+
+    // Handle mongoose duplicate key error
+    if (error.code === 11000) {
+      const field = Object.keys(error.keyValue)[0];
+      return res.status(400).json({
+        message: `${field === "email" ? "Email" : "University ID"} already in use`,
+      });
+    }
+
+    // Handle mongoose validation error
+    if (error.name === "ValidationError") {
+      const message = Object.values(error.errors)[0].message;
+      return res.status(400).json({ message });
+    }
+
     res.status(500).json({
       message: "Server error during registration",
       error: error.message,
