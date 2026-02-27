@@ -82,4 +82,11 @@ app.listen(PORT, () => {
   console.log(`Server running on port ${PORT}`);
 });
 
-
+// Add this just before app.listen()
+app.use((err, req, res, next) => {
+  console.error("💥 Unhandled Error:", err.stack);
+  res.status(500).json({
+    message: "Internal server error",
+    error: process.env.NODE_ENV === "development" ? err.message : "Something went wrong"
+  });
+});

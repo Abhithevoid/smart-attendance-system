@@ -16,7 +16,11 @@ import AdminDashboard   from "./pages/dashboard/AdminDashboard";
 import TeacherDashboard from "./pages/dashboard/TeacherDashboard";
 import StudentDashboard from "./pages/dashboard/StudentDashboard";
 
-// ─── Smart /dashboard redirect based on role ──────────────────────────────────
+// Feature pages
+import AdminUsers from "./pages/AdminUsers";
+import Profile    from "./pages/Profile";
+
+// ─── Smart /dashboard redirect ────────────────────────────────────────────────
 function DashboardRedirect() {
   const { user, isAuthenticated } = useAuth();
   if (!isAuthenticated) return <Navigate to="/login" replace />;
@@ -28,7 +32,6 @@ function DashboardRedirect() {
   }
 }
 
-// ─── App ──────────────────────────────────────────────────────────────────────
 export default function App() {
   return (
     <AuthProvider>
@@ -46,21 +49,38 @@ export default function App() {
           {/* ── Protected: Admin ──────────────────────────────── */}
           <Route element={<ProtectedRoute roles={["admin"]} />}>
             <Route element={<DashboardLayout />}>
-              <Route path="/dashboard/admin"   element={<AdminDashboard />} />
+              <Route path="/dashboard/admin"            element={<AdminDashboard />} />
+              <Route path="/dashboard/admin/users"      element={<AdminUsers />} />
+              <Route path="/dashboard/admin/profile"    element={<Profile />} />
+              {/* Placeholder routes — replace with real pages as built */}
+              <Route path="/dashboard/admin/classes"    element={<AdminDashboard />} />
+              <Route path="/dashboard/admin/attendance" element={<AdminDashboard />} />
+              <Route path="/dashboard/admin/reports"    element={<AdminDashboard />} />
+              <Route path="/dashboard/admin/settings"   element={<AdminDashboard />} />
             </Route>
           </Route>
 
           {/* ── Protected: Teacher ────────────────────────────── */}
           <Route element={<ProtectedRoute roles={["teacher"]} />}>
             <Route element={<DashboardLayout />}>
-              <Route path="/dashboard/teacher" element={<TeacherDashboard />} />
+              <Route path="/dashboard/teacher"            element={<TeacherDashboard />} />
+              <Route path="/dashboard/teacher/profile"    element={<Profile />} />
+              {/* Placeholder routes */}
+              <Route path="/dashboard/teacher/classes"    element={<TeacherDashboard />} />
+              <Route path="/dashboard/teacher/attendance" element={<TeacherDashboard />} />
+              <Route path="/dashboard/teacher/students"   element={<TeacherDashboard />} />
+              <Route path="/dashboard/teacher/reports"    element={<TeacherDashboard />} />
             </Route>
           </Route>
 
           {/* ── Protected: Student ────────────────────────────── */}
           <Route element={<ProtectedRoute roles={["student"]} />}>
             <Route element={<DashboardLayout />}>
-              <Route path="/dashboard/student" element={<StudentDashboard />} />
+              <Route path="/dashboard/student"            element={<StudentDashboard />} />
+              <Route path="/dashboard/student/profile"    element={<Profile />} />
+              {/* Placeholder routes */}
+              <Route path="/dashboard/student/attendance" element={<StudentDashboard />} />
+              <Route path="/dashboard/student/classes"    element={<StudentDashboard />} />
             </Route>
           </Route>
 

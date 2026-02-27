@@ -97,6 +97,13 @@ const getUserById = async (req, res) => {
 // ─── PUT /api/user/:id ─────────────────────────────────────────────────────────
 // @desc   Update any user (admin) or own profile (any role)
 // @access Admin (any user) | Private (own profile)
+// ─── ADD THIS to your userController.js updateUser function ──────────────────
+// Replace the existing updateUser function with this version
+// It adds support for password change via currentPassword + newPassword
+
+//  const User    = require("../models/User");
+const bcrypt  = require("bcryptjs");
+
 const updateUser = async (req, res) => {
   try {
     const user = await User.findById(req.params.id);
@@ -112,15 +119,35 @@ const updateUser = async (req, res) => {
       });
     }
 
-    // ── Allowed fields ─────────────────────────────────────────────────────
-    const { name, email, department, phone, isActive } = req.body;
+    const {
+      name, email, department, phone, isActive,
+      currentPassword, newPassword,              // ← password change
+    } = req.body;
 
+    // ── Handle password change ─────────────────────────────────────────────
+    if (currentPassword && newPassword) {
+      // Fetch user WITH password for comparison
+      const userWithPass = await User.findById(req.params.id);
+      const isMatch = await userWithPass.matchPassword(currentPassword);
+
+      if (!isMatch) {
+        return res.status(400).json({ message: "Current password is incorrect" });
+      }
+
+      if (newPassword.length < 6) {
+        return res.status(400).json({ message: "New password must be at least 6 characters" });
+      }
+
+      user.password = newPassword; // pre-save hook will hash it
+    }
+
+    // ── Update other fields ────────────────────────────────────────────────
     if (name)       user.name       = name;
     if (email)      user.email      = email;
     if (department !== undefined) user.department = department;
-    if (phone !== undefined)      user.phone      = phone;
+    if (phone      !== undefined) user.phone      = phone;
 
-    // Only admin can change role and isActive status
+    // Only admin can change role and isActive
     if (req.user.role === "admin") {
       if (req.body.role && ["student", "teacher", "admin"].includes(req.body.role)) {
         user.role = req.body.role;
@@ -128,12 +155,9 @@ const updateUser = async (req, res) => {
       if (isActive !== undefined) user.isActive = isActive;
     }
 
-    // ── Check email uniqueness if changed ──────────────────────────────────
+    // ── Check email uniqueness ─────────────────────────────────────────────
     if (email && email !== user.email) {
-      const emailExists = await User.findOne({
-        email,
-        _id: { $ne: req.params.id },
-      });
+      const emailExists = await User.findOne({ email, _id: { $ne: req.params.id } });
       if (emailExists) {
         return res.status(400).json({ message: "Email already in use" });
       }
@@ -142,7 +166,7 @@ const updateUser = async (req, res) => {
     const updatedUser = await user.save();
 
     res.json({
-      message: "User updated successfully",
+      message: currentPassword ? "Password updated successfully" : "Profile updated successfully",
       user: {
         _id:          updatedUser._id,
         name:         updatedUser.name,
@@ -161,12 +185,10 @@ const updateUser = async (req, res) => {
     if (error.kind === "ObjectId") {
       return res.status(404).json({ message: "User not found" });
     }
-
     if (error.name === "ValidationError") {
       const message = Object.values(error.errors)[0].message;
       return res.status(400).json({ message });
     }
-
     if (error.code === 11000) {
       const field = Object.keys(error.keyValue)[0];
       return res.status(400).json({
@@ -180,6 +202,8 @@ const updateUser = async (req, res) => {
     });
   }
 };
+
+module.exports = { updateUser };
 
 // ─── DELETE /api/user/:id ──────────────────────────────────────────────────────
 // @desc   Delete a user
