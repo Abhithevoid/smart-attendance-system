@@ -94,20 +94,22 @@ export function AuthProvider({ children }) {
   };
 
   const register = async (formData) => {
-    dispatch({ type: "SET_LOADING", payload: true });
-    dispatch({ type: "CLEAR_ERROR" });
-    try {
-      const { data } = await authAPI.register(formData);
-      localStorage.setItem("user", JSON.stringify(data));
-      dispatch({ type: "REGISTER_SUCCESS", payload: data });
-      return { success: true, role: data.role };
-    } catch (error) {
-      const message =
-        error.response?.data?.message || "Registration failed. Please try again.";
-      dispatch({ type: "SET_ERROR", payload: message });
-      return { success: false, error: message };
-    }
-  };
+  dispatch({ type: "SET_LOADING", payload: true });
+  dispatch({ type: "CLEAR_ERROR" });
+  try {
+    const { data } = await authAPI.register(formData);
+    localStorage.setItem("user", JSON.stringify(data));
+    dispatch({ type: "REGISTER_SUCCESS", payload: data });
+    return { success: true, role: data.role };
+  } catch (error) {
+    const message =
+      error.response?.data?.message ||
+      error.response?.data?.errors?.[0]?.msg ||  // ← handles array format
+      "Registration failed. Please try again.";
+    dispatch({ type: "SET_ERROR", payload: message });
+    return { success: false, error: message };
+  }
+};
 
   const logout = () => {
     localStorage.removeItem("user");
