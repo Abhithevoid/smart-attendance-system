@@ -106,6 +106,11 @@ const attendanceSchema = new mongoose.Schema(
       type: mongoose.Schema.Types.ObjectId,
       ref:  "User",
     },
+
+    // Anti-proxy fields
+    isSuspicious: { type: Boolean, default: false },
+    riskScore:    { type: Number,  default: 0      },
+    suspiciousFlags: { type: Array, default: []    },
   },
   {
     timestamps: true,

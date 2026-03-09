@@ -25,15 +25,21 @@ mongoose
   });
 
 // ─── Routes ───────────────────────────────────────────────────────────────────
-const authRoutes       = require("./routes/auth");
-const userRoutes       = require("./routes/user");
-const courseRoutes     = require("./routes/course");
-const enrollmentRoutes = require("./routes/enrollment");
+const authRoutes        = require("./routes/auth");
+const userRoutes        = require("./routes/user");
+const courseRoutes      = require("./routes/course");
+const enrollmentRoutes  = require("./routes/enrollment");
+const sessionRoutes     = require("./routes/session");
+const classroomRoutes   = require("./routes/classroom");
+const attendanceRoutes  = require("./routes/attendance");
 
-app.use("/api/auth",       authRoutes);
-app.use("/api/user",       userRoutes);
-app.use("/api/course",     courseRoutes);
-app.use("/api/enrollment", enrollmentRoutes);
+app.use("/api/auth",        authRoutes);
+app.use("/api/user",        userRoutes);
+app.use("/api/course",      courseRoutes);
+app.use("/api/enrollment",  enrollmentRoutes);
+app.use("/api/session",     sessionRoutes);
+app.use("/api/classroom",   classroomRoutes);
+app.use("/api/attendance",  attendanceRoutes);
 
 // ─── Health check ─────────────────────────────────────────────────────────────
 app.get("/api/health", (req, res) => {

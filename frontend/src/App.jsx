@@ -11,14 +11,22 @@ import Login        from "./pages/Login";
 import Register     from "./pages/Register";
 import Unauthorized from "./pages/Unauthorized";
 
-// Dashboard pages
+// Dashboard home pages
 import AdminDashboard   from "./pages/dashboard/AdminDashboard";
 import TeacherDashboard from "./pages/dashboard/TeacherDashboard";
 import StudentDashboard from "./pages/dashboard/StudentDashboard";
 
-// Feature pages
+// Shared pages
 import AdminUsers from "./pages/AdminUsers";
 import Profile    from "./pages/Profile";
+
+// Teacher pages ✅
+import TeacherCourses from "./pages/Teacher/TeacherCourses";
+import SessionPage    from "./pages/Teacher/SessionPage";
+
+// Student pages ✅
+import StudentCourses from "./pages/Student/StudentCourses";
+import ScanPage       from "./pages/Student/ScanPage";
 
 // ─── Smart /dashboard redirect ────────────────────────────────────────────────
 function DashboardRedirect() {
@@ -52,7 +60,6 @@ export default function App() {
               <Route path="/dashboard/admin"            element={<AdminDashboard />} />
               <Route path="/dashboard/admin/users"      element={<AdminUsers />} />
               <Route path="/dashboard/admin/profile"    element={<Profile />} />
-              {/* Placeholder routes — replace with real pages as built */}
               <Route path="/dashboard/admin/classes"    element={<AdminDashboard />} />
               <Route path="/dashboard/admin/attendance" element={<AdminDashboard />} />
               <Route path="/dashboard/admin/reports"    element={<AdminDashboard />} />
@@ -63,24 +70,24 @@ export default function App() {
           {/* ── Protected: Teacher ────────────────────────────── */}
           <Route element={<ProtectedRoute roles={["teacher"]} />}>
             <Route element={<DashboardLayout />}>
-              <Route path="/dashboard/teacher"            element={<TeacherDashboard />} />
-              <Route path="/dashboard/teacher/profile"    element={<Profile />} />
-              {/* Placeholder routes */}
-              <Route path="/dashboard/teacher/classes"    element={<TeacherDashboard />} />
-              <Route path="/dashboard/teacher/attendance" element={<TeacherDashboard />} />
-              <Route path="/dashboard/teacher/students"   element={<TeacherDashboard />} />
-              <Route path="/dashboard/teacher/reports"    element={<TeacherDashboard />} />
+              <Route path="/dashboard/teacher"               element={<TeacherDashboard />} />
+              <Route path="/dashboard/teacher/profile"       element={<Profile />} />
+              <Route path="/dashboard/teacher/classes"       element={<TeacherCourses />} />
+              <Route path="/dashboard/teacher/session/:id"   element={<SessionPage />} />  {/* ✅ Real QR page */}
+              <Route path="/dashboard/teacher/attendance"    element={<TeacherDashboard />} />
+              <Route path="/dashboard/teacher/students"      element={<TeacherDashboard />} />
+              <Route path="/dashboard/teacher/reports"       element={<TeacherDashboard />} />
             </Route>
           </Route>
 
           {/* ── Protected: Student ────────────────────────────── */}
           <Route element={<ProtectedRoute roles={["student"]} />}>
             <Route element={<DashboardLayout />}>
-              <Route path="/dashboard/student"            element={<StudentDashboard />} />
-              <Route path="/dashboard/student/profile"    element={<Profile />} />
-              {/* Placeholder routes */}
-              <Route path="/dashboard/student/attendance" element={<StudentDashboard />} />
-              <Route path="/dashboard/student/classes"    element={<StudentDashboard />} />
+              <Route path="/dashboard/student"              element={<StudentDashboard />} />
+              <Route path="/dashboard/student/profile"      element={<Profile />} />
+              <Route path="/dashboard/student/classes"      element={<StudentCourses />} />
+              <Route path="/dashboard/student/scan/:id"     element={<ScanPage />} />
+              <Route path="/dashboard/student/attendance"   element={<StudentDashboard />} />
             </Route>
           </Route>
 

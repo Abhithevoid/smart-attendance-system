@@ -33,7 +33,33 @@ export default {
           4: "#444c56",
         }
       },
+      animation: {
+        "fade-up": "fadeUp 0.5s ease forwards",
+        "fade-in": "fadeIn 0.4s ease forwards",
+        "slide-in": "slideIn 0.4s ease forwards",
+        "pulse-slow": "pulse 3s cubic-bezier(0.4,0,0.6,1) infinite",
+        "scan-line": "scanLine 2s ease-in-out infinite",
+      },
+      keyframes: {
+        scanLine: {
+          "0%":   { top: "8px"   },
+          "50%":  { top: "calc(100% - 8px)" },
+          "100%": { top: "8px"   },
+        },
+        fadeUp: {
+          "0%": { opacity: 0, transform: "translateY(20px)" },
+          "100%": { opacity: 1, transform: "translateY(0)" },
+        },
+        fadeIn: {
+          "0%": { opacity: 0 },
+          "100%": { opacity: 1 },
+        },
+        slideIn: {
+          "0%": { opacity: 0, transform: "translateX(-20px)" },
+          "100%": { opacity: 1, transform: "translateX(0)" },
+        },
+      },
     },
   },
   plugins: [],
-}
+};

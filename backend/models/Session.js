@@ -110,7 +110,6 @@ const sessionSchema = new mongoose.Schema(
 sessionSchema.index({ courseId:  1 });
 sessionSchema.index({ teacherId: 1 });
 sessionSchema.index({ date:      1 });
-sessionSchema.index({ qrCode:    1 });   // fast QR token lookup
 sessionSchema.index({ status:    1 });
 sessionSchema.index({ courseId:  1, date: -1 });      // latest sessions per course
 sessionSchema.index({ teacherId: 1, status: 1 });     // teacher's active sessions
@@ -168,11 +167,10 @@ sessionSchema.statics.expireOldSessions = async function () {
 };
 
 // ─── Pre-save: auto-set status to expired if qrExpiry passed ──────────────────
-sessionSchema.pre("save", function (next) {
+sessionSchema.pre("save", function () {
   if (this.qrExpiry && this.qrExpiry < new Date() && this.status === "active") {
     this.status = "expired";
   }
-  next();
 });
 
 module.exports = mongoose.model("Session", sessionSchema);
