@@ -265,7 +265,8 @@ const getCourseSessions = async (req, res) => {
              .populate("teacherId", "name email")
              .sort({ date: -1, createdAt: -1 })
              .skip((pageNum - 1) * limitNum)
-             .limit(limitNum),
+             .limit(limitNum)
+             .lean(),
       Session.countDocuments(query),
     ]);
 
@@ -369,7 +370,7 @@ const endSession = async (req, res) => {
     }
 
     session.status  = "completed";
-    session.endTime = req.body.endTime || new Date().toTimeString().slice(0, 5);
+    session.endTime = req.body?.endTime || new Date().toTimeString().slice(0, 5);
     await session.save();
 
     // Get final attendance summary

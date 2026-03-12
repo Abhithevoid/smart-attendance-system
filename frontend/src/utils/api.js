@@ -6,7 +6,7 @@ const api = axios.create({
   headers: {
     "Content-Type": "application/json",
   },
-  timeout: 10000,
+  timeout: 15000,
 });
 
 // ─── Request Interceptor: attach token ────────────────────────────────────────
@@ -26,7 +26,7 @@ api.interceptors.request.use(
   (error) => Promise.reject(error)
 );
 
-// ─── Response Interceptor: handle 401 globally ────────────────────────────────
+// ─── Response Interceptor: handle 401 + network errors ──────────────────────
 api.interceptors.response.use(
   (response) => response,
   (error) => {
@@ -34,6 +34,14 @@ api.interceptors.response.use(
       // Token expired or invalid → force logout
       localStorage.removeItem("user");
       window.location.href = "/login";
+      return Promise.reject(error);
+    }
+    // Attach a friendly message for network / timeout errors
+    if (error.code === "ECONNABORTED" || error.message?.includes("timeout")) {
+      error.friendlyMessage = "Request timed out. Check your connection and try again.";
+    } else if (!error.response) {
+      // No response at all = server down / no internet
+      error.friendlyMessage = "Cannot reach server. Please check your internet connection.";
     }
     return Promise.reject(error);
   }

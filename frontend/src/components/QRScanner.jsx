@@ -349,15 +349,23 @@ export default function QRScanner({ sessionId: propSessionId }) {
   // ── Step 1: Get GPS ──────────────────────────────────────────────────────
   useEffect(() => {
     let cancelled = false;
+    // Auto-skip GPS after 15 seconds regardless
+    const autoSkipTimer = setTimeout(() => {
+      if (!cancelled && state === S.GPS) setState(S.REQUESTING);
+    }, 15000);
+
     (async () => {
-      const pos = await getCurrentPosition({ timeout: 10000 });
+      const pos = await getCurrentPosition({ timeout: 12000 });
       if (cancelled) return;
       setGpsStatus(pos.status);
       if (pos.lat !== null) setLocation(pos);
       // Move to camera regardless of GPS result
       setState(S.REQUESTING);
     })();
-    return () => { cancelled = true; };
+    return () => {
+      cancelled = true;
+      clearTimeout(autoSkipTimer);
+    };
   }, []);
 
   // ── Submit QR ────────────────────────────────────────────────────────────
@@ -386,7 +394,7 @@ export default function QRScanner({ sessionId: propSessionId }) {
       const d = err.response?.data || {};
       setResult({
         success:       false,
-        message:       d.message || "Failed to mark attendance",
+        message:       err.friendlyMessage || d.message || "Failed to mark attendance",
         code:          d.code,
         distance:      d.distance,
         allowedRadius: d.allowedRadius,
@@ -417,12 +425,14 @@ export default function QRScanner({ sessionId: propSessionId }) {
       setState(S.SCANNING);
     } catch (err) {
       const msg = err?.message || "";
-      if (msg.toLowerCase().includes("permission") || msg.includes("NotAllowed")) {
-        setCamError("Camera permission denied — please allow camera in browser settings");
-      } else if (msg.includes("NotFound") || msg.toLowerCase().includes("no camera")) {
-        setCamError("No camera found on this device");
+      if (msg.toLowerCase().includes("permission") || msg.includes("NotAllowed") || msg.includes("denied")) {
+        setCamError("Camera permission denied — tap the camera icon in your browser's address bar to allow access.");
+      } else if (msg.includes("NotFound") || msg.toLowerCase().includes("no camera") || msg.toLowerCase().includes("not found")) {
+        setCamError("No camera found on this device — use manual entry below.");
+      } else if (msg.toLowerCase().includes("insecure") || msg.includes("https")) {
+        setCamError("Camera requires HTTPS — open this page over a secure connection.");
       } else {
-        setCamError("Could not start camera — try manual entry");
+        setCamError("Could not start camera — try switching browsers or use manual entry.");
       }
       setState(S.NO_CAMERA);
     }

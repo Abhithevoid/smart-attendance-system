@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef, useCallback } from "react";
+import { useState, useEffect, useRef, useCallback, useMemo } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import api from "../../utils/api";
 import QRCode from "qrcode";
@@ -50,7 +50,8 @@ function AttendanceRow({ record, index }) {
   return (
     <div className="flex items-center justify-between px-4 py-2.5
                     border-b border-surface-2/50 last:border-0
-                    hover:bg-surface-2/30 transition-colors">
+                    hover:bg-surface-2/30 transition-colors animate-fade-up"
+         style={{ animationDelay: `${Math.min(index * 30, 300)}ms` }}>
       <div className="flex items-center gap-3">
         <span className="text-[10px] font-mono text-gray-700 w-5 text-right">{index+1}</span>
         <div className="w-7 h-7 rounded-full bg-blue-500/10 border border-blue-500/20
@@ -141,10 +142,8 @@ export default function SessionPage() {
     setLoading(true);
     setError("");
     try {
-      // Backend returns: { session: { ...fields } }
       const { data } = await api.get(`/session/${id}`);
-      console.log("Session response:", data);           // debug — check in console
-      const s = data.session || data;                   // handle both shapes
+      const s = data.session || data;
       setSession(s);
 
       if (s.qrCode) {
@@ -152,8 +151,7 @@ export default function SessionPage() {
         startCountdown(s.qrExpiry, s.qrDuration);
       }
     } catch (err) {
-      console.error("fetchSession error:", err.response?.data || err.message);
-      setError(err.response?.data?.message || "Failed to load session");
+      setError(err.friendlyMessage || err.response?.data?.message || "Failed to load session");
     } finally {
       setLoading(false);
     }
@@ -166,7 +164,7 @@ export default function SessionPage() {
       setAttendance(data.records || []);
       setSummary(data.summary   || null);
     } catch (err) {
-      console.warn("fetchAttendance error:", err.response?.data || err.message);
+      // non-fatal: attendance panel just won't update
     }
   }, [id]);
 
@@ -176,9 +174,7 @@ export default function SessionPage() {
     setQrLoading(true);
     try {
       const duration = sess.qrDuration || 10;
-      // POST /api/session/:id/generate-qr  → returns { qrCode, qrExpiry, timeRemaining }
       const { data } = await api.post(`/session/${id}/generate-qr`, { qrDuration: duration });
-      console.log("generateQR response:", data);
       const qr     = data.qrCode;
       const expiry = data.qrExpiry;
       if (qr) {
@@ -187,7 +183,7 @@ export default function SessionPage() {
         setSession(prev => ({ ...prev, qrCode: qr, qrExpiry: expiry }));
       }
     } catch (err) {
-      console.error("generateQR error:", err.response?.data || err.message);
+      // silent — QR will show regenerate button
     } finally {
       setQrLoading(false);
     }
@@ -198,9 +194,7 @@ export default function SessionPage() {
     setQrLoading(true);
     try {
       const duration = session?.qrDuration || 10;
-      // POST /api/session/:id/regenerate-qr → returns { session: { qrCode, qrExpiry } }
       const { data } = await api.post(`/session/${id}/regenerate-qr`, { qrDuration: duration });
-      console.log("regenerateQR response:", data);
       const s      = data.session || data;
       const qr     = s.qrCode  || data.qrCode;
       const expiry = s.qrExpiry || data.qrExpiry;
@@ -210,8 +204,7 @@ export default function SessionPage() {
         setSession(prev => ({ ...prev, qrCode: qr, qrExpiry: expiry, status: "active" }));
       }
     } catch (err) {
-      console.error("regenerateQR error:", err.response?.data || err.message);
-      setError("Failed to regenerate QR");
+      setError(err.friendlyMessage || err.response?.data?.message || "Failed to regenerate QR");
     } finally {
       setQrLoading(false);
     }
@@ -222,10 +215,10 @@ export default function SessionPage() {
     if (!window.confirm("End this session? Students can no longer mark attendance.")) return;
     setEnding(true);
     try {
-      await api.patch(`/session/${id}/end`);
+      await api.patch(`/session/${id}/end`, {});
       navigate("/dashboard/teacher/classes");
     } catch (err) {
-      setError("Failed to end session");
+      setError(err.response?.data?.message || "Failed to end session");
       setEnding(false);
     }
   };
@@ -262,6 +255,14 @@ export default function SessionPage() {
       generateQR(session);
     }
   }, [session, generateQR]);
+
+  // ── Auto-regenerate QR when countdown hits 0 (active sessions only) ──────
+  useEffect(() => {
+    if (secondsLeft === 0 && session?.status === "active" && qrDataUrl && !qrLoading) {
+      handleRegenerate();
+    }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [secondsLeft]);
 
   // ── Render ────────────────────────────────────────────────────────────────
   if (loading) {
@@ -303,14 +304,23 @@ export default function SessionPage() {
     );
   }
 
-  const course        = session?.courseId || {};
-  const isActive      = session?.status === "active";
-  const qrExpired     = secondsLeft === 0 && !!session?.qrExpiry;
-  const presentCount  = summary?.present || attendance.filter(r => r.status === "present").length;
-  const lateCount     = summary?.late    || attendance.filter(r => r.status === "late").length;
-  const totalEnrolled = summary?.totalEnrolled || 0;
-  const marked        = presentCount + lateCount;
-  const pct           = totalEnrolled > 0 ? Math.round((marked / totalEnrolled) * 100) : 0;
+  const course    = session?.courseId || {};
+  const isActive  = session?.status === "active";
+  const qrExpired = secondsLeft === 0 && !!session?.qrExpiry;
+
+  const stats = useMemo(() => {
+    const present  = summary?.present || attendance.filter(r => r.status === "present").length;
+    const late     = summary?.late    || attendance.filter(r => r.status === "late").length;
+    const enrolled = summary?.totalEnrolled || 0;
+    const marked   = present + late;
+    const pct      = enrolled > 0 ? Math.round((marked / enrolled) * 100) : 0;
+    return { present, late, enrolled, marked, pct };
+  }, [summary, attendance]);
+
+  const { presentCount, lateCount, totalEnrolled, marked, pct } = {
+    presentCount: stats.present, lateCount: stats.late,
+    totalEnrolled: stats.enrolled, marked: stats.marked, pct: stats.pct,
+  };
 
   return (
     <div className="flex flex-col gap-5 max-w-5xl mx-auto">
@@ -330,10 +340,13 @@ export default function SessionPage() {
                 {course.name || "Session"}
               </h1>
               <span className={`text-[10px] font-mono px-2 py-0.5 rounded-full border
+                flex items-center gap-1
                 ${isActive
                   ? "bg-brand-500/10 border-brand-500/20 text-brand-400"
                   : "bg-surface-2 border-surface-3 text-gray-500"}`}>
-                {isActive ? "● Live" : session?.status || "—"}
+                {isActive
+                  ? <><span className="inline-block w-1.5 h-1.5 rounded-full bg-brand-400 animate-pulse" />Live</>
+                  : session?.status || "—"}
               </span>
             </div>
             <p className="text-xs text-gray-500 font-mono mt-0.5">
@@ -458,16 +471,18 @@ export default function SessionPage() {
             {/* Actions */}
             {qrDataUrl && !qrExpired && (
               <div className="flex gap-2 w-full">
-                <button onClick={handleDownload}
+                <button onClick={handleDownload} title="Download QR as PNG"
                   className="flex-1 flex items-center justify-center gap-1.5 py-2
                              bg-surface-2 hover:bg-surface-3 border border-surface-3
-                             text-gray-300 text-xs font-display rounded-xl transition-all">
+                             text-gray-300 text-xs font-display rounded-xl transition-all
+                             active:scale-95">
                   <Download size={12} /> Download
                 </button>
-                <button onClick={handleCopy}
+                <button onClick={handleCopy} title="Copy QR code string to clipboard"
                   className="flex-1 flex items-center justify-center gap-1.5 py-2
                              bg-surface-2 hover:bg-surface-3 border border-surface-3
-                             text-gray-300 text-xs font-display rounded-xl transition-all">
+                             text-gray-300 text-xs font-display rounded-xl transition-all
+                             active:scale-95">
                   {copied
                     ? <><Check size={12} className="text-green-400" /> Copied!</>
                     : <><Copy size={12} /> Copy Code</>}
