@@ -17,8 +17,13 @@ import TeacherDashboard from "./pages/dashboard/TeacherDashboard";
 import StudentDashboard from "./pages/dashboard/StudentDashboard";
 
 // Shared pages
-import AdminUsers from "./pages/AdminUsers";
-import Profile    from "./pages/Profile";
+import AdminUsers      from "./pages/AdminUsers";
+import AdminCourses     from "./pages/AdminCourses";
+import AdminClassrooms  from "./pages/AdminClassrooms";
+import AdminSessions    from "./pages/AdminSessions";
+import AdminEnrollments from "./pages/AdminEnrollments";
+import SystemSettings   from "./pages/SystemSettings";
+import Profile          from "./pages/Profile";
 
 // Teacher pages ✅
 import TeacherCourses from "./pages/Teacher/TeacherCourses";
@@ -57,13 +62,17 @@ export default function App() {
           {/* ── Protected: Admin ──────────────────────────────── */}
           <Route element={<ProtectedRoute roles={["admin"]} />}>
             <Route element={<DashboardLayout />}>
-              <Route path="/dashboard/admin"            element={<AdminDashboard />} />
-              <Route path="/dashboard/admin/users"      element={<AdminUsers />} />
-              <Route path="/dashboard/admin/profile"    element={<Profile />} />
-              <Route path="/dashboard/admin/classes"    element={<AdminDashboard />} />
-              <Route path="/dashboard/admin/attendance" element={<AdminDashboard />} />
-              <Route path="/dashboard/admin/reports"    element={<AdminDashboard />} />
-              <Route path="/dashboard/admin/settings"   element={<AdminDashboard />} />
+              <Route path="/dashboard/admin"               element={<AdminDashboard />} />
+              <Route path="/dashboard/admin/users"         element={<AdminUsers />} />
+              <Route path="/dashboard/admin/profile"       element={<Profile />} />
+              <Route path="/dashboard/admin/courses"       element={<AdminCourses />} />
+              <Route path="/dashboard/admin/classrooms"    element={<AdminClassrooms />} />
+              <Route path="/dashboard/admin/sessions"      element={<AdminSessions />} />
+              <Route path="/dashboard/admin/enrollments"   element={<AdminEnrollments />} />
+              <Route path="/dashboard/admin/classes"       element={<AdminDashboard />} />
+              <Route path="/dashboard/admin/attendance"    element={<AdminDashboard />} />
+              <Route path="/dashboard/admin/reports"       element={<AdminDashboard />} />
+              <Route path="/dashboard/admin/settings"      element={<SystemSettings />} />
             </Route>
           </Route>
 

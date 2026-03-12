@@ -5,17 +5,21 @@ import {
   LayoutDashboard, Users, BookOpen, ClipboardCheck,
   BarChart2, Settings, GraduationCap, UserCog,
   LogOut, Bell, Menu, X, ChevronDown, User,
+  Building2, Activity,
 } from "lucide-react";
 
 // ─── Nav config per role ──────────────────────────────────────────────────────
 const NAV_CONFIG = {
   admin: [
-    { to: "/dashboard/admin",            icon: LayoutDashboard, label: "Overview"   },
-    { to: "/dashboard/admin/users",      icon: Users,           label: "Users"      },
-    { to: "/dashboard/admin/classes",    icon: BookOpen,        label: "Classes"    },
-    { to: "/dashboard/admin/attendance", icon: ClipboardCheck,  label: "Attendance" },
-    { to: "/dashboard/admin/reports",    icon: BarChart2,       label: "Reports"    },
-    { to: "/dashboard/admin/settings",   icon: Settings,        label: "Settings"   },
+    { to: "/dashboard/admin",               icon: LayoutDashboard, label: "Overview"    },
+    { to: "/dashboard/admin/users",         icon: Users,           label: "Users"       },
+    { to: "/dashboard/admin/courses",       icon: BookOpen,        label: "Courses"     },
+    { to: "/dashboard/admin/classrooms",    icon: Building2,       label: "Classrooms"  },
+    { to: "/dashboard/admin/sessions",      icon: Activity,        label: "Sessions"    },
+    { to: "/dashboard/admin/enrollments",   icon: GraduationCap,   label: "Enrollments" },
+    { to: "/dashboard/admin/attendance",    icon: ClipboardCheck,  label: "Attendance"  },
+    { to: "/dashboard/admin/reports",       icon: BarChart2,       label: "Reports"     },
+    { to: "/dashboard/admin/settings",      icon: Settings,        label: "Settings"    },
   ],
   teacher: [
     { to: "/dashboard/teacher",              icon: LayoutDashboard, label: "Overview"        },
