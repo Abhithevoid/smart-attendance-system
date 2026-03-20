@@ -264,6 +264,24 @@ export default function SessionPage() {
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [secondsLeft]);
 
+  const course    = session?.courseId || {};
+  const isActive  = session?.status === "active";
+  const qrExpired = secondsLeft === 0 && !!session?.qrExpiry;
+
+  const stats = useMemo(() => {
+    const present  = summary?.present || attendance.filter(r => r.status === "present").length;
+    const late     = summary?.late    || attendance.filter(r => r.status === "late").length;
+    const enrolled = summary?.totalEnrolled || 0;
+    const marked   = present + late;
+    const pct      = enrolled > 0 ? Math.round((marked / enrolled) * 100) : 0;
+    return { present, late, enrolled, marked, pct };
+  }, [summary, attendance]);
+
+  const { presentCount, lateCount, totalEnrolled, marked, pct } = {
+    presentCount: stats.present, lateCount: stats.late,
+    totalEnrolled: stats.enrolled, marked: stats.marked, pct: stats.pct,
+  };
+
   // ── Render ────────────────────────────────────────────────────────────────
   if (loading) {
     return (
@@ -303,24 +321,6 @@ export default function SessionPage() {
       </div>
     );
   }
-
-  const course    = session?.courseId || {};
-  const isActive  = session?.status === "active";
-  const qrExpired = secondsLeft === 0 && !!session?.qrExpiry;
-
-  const stats = useMemo(() => {
-    const present  = summary?.present || attendance.filter(r => r.status === "present").length;
-    const late     = summary?.late    || attendance.filter(r => r.status === "late").length;
-    const enrolled = summary?.totalEnrolled || 0;
-    const marked   = present + late;
-    const pct      = enrolled > 0 ? Math.round((marked / enrolled) * 100) : 0;
-    return { present, late, enrolled, marked, pct };
-  }, [summary, attendance]);
-
-  const { presentCount, lateCount, totalEnrolled, marked, pct } = {
-    presentCount: stats.present, lateCount: stats.late,
-    totalEnrolled: stats.enrolled, marked: stats.marked, pct: stats.pct,
-  };
 
   return (
     <div className="flex flex-col gap-5 max-w-5xl mx-auto">
